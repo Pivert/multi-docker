@@ -1,0 +1,21 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t pivert/react-test -f client/Dockerfile.dev ./client/
+
+script:
+    - docker run -e CI=true pivert/react-test npm test
+
+after_success:
+    - docker build -t pivert/multi-client ./client
+    - docker build -t pivert/multi-nginx ./nginx
+    - docker build -t pivert/multi-server ./server
+    - docker build -t pivert/multi-worker ./worker
+    # Take those images and push to Docker hub
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    - docker push pivert/multi-client
+    - docker push pivert/multi-nginx
+    - docker push pivert/multi-server
+    - docker push pivert/multi-worker
